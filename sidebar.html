@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <style>
+      /* Add your CSS styles here */
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+}
+
+#dataForm {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+label {
+  font-weight: bold;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input[type="submit"] {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+input[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+    </style>
+</head>
+<body>
+    <h2>CSV Column Import and Filter</h2>
+    <form id="dataForm">
+        <label for="csvFile">Select CSV File:</label>
+        <input type="file" id="csvFile" name="csvFile" accept=".csv" required>
+        <br><br>
+        <label for="columns">Select Columns:</label>
+        <select id="columns" name="columns" multiple="multiple" required></select>
+        <br><br>
+        <label for="filterColumn">Filter Column:</label>
+        <select id="filterColumn" name="filterColumn">
+            <option value="">No Filter</option>
+        </select>
+        <br><br>
+        <label for="filterValue">Filter Value:</label>
+        <input type="text" id="filterValue" name="filterValue">
+        <br><br>
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+
+    <script>
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var csvData = e.target.result;
+                    parseCSV(csvData);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function parseCSV(csvData) {
+            var lines = csvData.split('\n');
+            var headers = lines[0].split(',');
+            var columnsSelect = document.getElementById('columns');
+            var filterColumnSelect = document.getElementById('filterColumn');
+
+            columnsSelect.innerHTML = '';
+            filterColumnSelect.innerHTML = '<option value="">No Filter</option>';
+
+            headers.forEach(function(header) {
+                var option = document.createElement('option');
+                option.text = header;
+                columnsSelect.appendChild(option);
+
+                var filterOption = document.createElement('option');
+                filterOption.text = header;
+                filterColumnSelect.appendChild(filterOption);
+            });
+        }
+
+        function submitForm() {
+            var fileInput = document.getElementById('csvFile');
+            var selectedColumns = Array.from(document.getElementById('columns').selectedOptions).map(option => option.text);
+            var filterColumn = document.getElementById('filterColumn').value;
+            var filterValue = document.getElementById('filterValue').value;
+
+            if (fileInput.files.length === 0 || selectedColumns.length === 0) {
+                alert('Please select a CSV file and at least one column.');
+                return;
+            }
+
+            var file = fileInput.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var csvData = e.target.result;
+                google.script.run.importAndFilterCSV(csvData, selectedColumns, filterColumn, filterValue);
+                fileInput.value = ''; // Clear the file input field
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
